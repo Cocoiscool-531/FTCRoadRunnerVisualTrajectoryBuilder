@@ -3,3 +3,5 @@ save/*
 export/*
 .vscode/*
 TrajectoryBuilder.lnk
+main.lnk
+.fake

@@ -1,1 +1,2 @@
-g++ -fdiagnostics-color=always -g ./main/src/*.cpp ./include/glad/*.c ./include/imgui/*.cpp -o ./bin/trajectoryBuilder -I ./include -I ./main/src -L ./bin/ -l :libglfw.so -O2 -s
+/usr/bin/clear
+cc -fdiagnostics-color -Wc++11-long-long -Wc++11-extensions -Iinclude -Imain/src -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -g main/src/*.cpp include/glad/*.c include/imgui/*.cpp -o bin/trajectoryBuilderMacArm

@@ -91,7 +91,7 @@ static std::string sendToRobot(const std::string& msg)
 		return "err";
 	}
 
-	printf("Bytes Sent: %ld\n", iResult);
+	printf("Bytes Sent: %d\n", iResult);
 	std::string recive = "";
 	char* buf = new char[513];
 	while (recv(sock, buf, 512, 0))

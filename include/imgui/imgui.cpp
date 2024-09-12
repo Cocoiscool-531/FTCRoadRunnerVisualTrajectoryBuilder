@@ -1,4 +1,4 @@
-// dear imgui, v1.91.1
+// dear imgui, v1.91.2 WIP
 // (main code and documentation)
 
 // Help:
@@ -10,7 +10,7 @@
 // - FAQ ........................ https://dearimgui.com/faq (in repository as docs/FAQ.md)
 // - Homepage ................... https://github.com/ocornut/imgui
 // - Releases & changelog ....... https://github.com/ocornut/imgui/releases
-// - Gallery .................... https://github.com/ocornut/imgui/issues/7503 (please post your screenshots/video there!)
+// - Gallery .................... https://github.com/ocornut/imgui/issues?q=label%3Agallery (please post your screenshots/video there!)
 // - Wiki ....................... https://github.com/ocornut/imgui/wiki (lots of good stuff there)
 //   - Getting Started            https://github.com/ocornut/imgui/wiki/Getting-Started (how to integrate in an existing app by adding ~25 lines of code)
 //   - Third-party Extensions     https://github.com/ocornut/imgui/wiki/Useful-Extensions (ImPlot & many more)
@@ -1434,6 +1434,8 @@ ImGuiIO::ImGuiIO()
     ConfigWindowsResizeFromEdges = true;
     ConfigWindowsMoveFromTitleBarOnly = false;
     ConfigMemoryCompactTimer = 60.0f;
+    ConfigDebugIsDebuggerPresent = false;
+    ConfigDebugHighlightIdConflicts = true;
     ConfigDebugBeginReturnValueOnce = false;
     ConfigDebugBeginReturnValueLoop = false;
 
@@ -2033,7 +2035,7 @@ const char* ImStreolRange(const char* str, const char* str_end)
     return p ? p : str_end;
 }
 
-const ImWchar* ImStrbolW(const ImWchar* buf_mid_line, const ImWchar* buf_begin) // find beginning-of-line
+const char* ImStrbol(const char* buf_mid_line, const char* buf_begin) // find beginning-of-line
 {
     while (buf_mid_line > buf_begin && buf_mid_line[-1] != '\n')
         buf_mid_line--;
@@ -3848,7 +3850,7 @@ void ImGui::DestroyContext(ImGuiContext* ctx)
     IM_DELETE(ctx);
 }
 
-// IMPORTANT: ###xxx suffixes must be same in ALL languages to allow for automation.
+// IMPORTANT: interactive elements requires a fixed ###xxx suffix, it must be same in ALL languages to allow for automation.
 static const ImGuiLocEntry GLocalizationEntriesEnUS[] =
 {
     { ImGuiLocKey_VersionStr,           "Dear ImGui " IMGUI_VERSION " (" IM_STRINGIFY(IMGUI_VERSION_NUM) ")" },
@@ -3859,8 +3861,9 @@ static const ImGuiLocEntry GLocalizationEntriesEnUS[] =
     { ImGuiLocKey_WindowingMainMenuBar, "(Main menu bar)"                       },
     { ImGuiLocKey_WindowingPopup,       "(Popup)"                               },
     { ImGuiLocKey_WindowingUntitled,    "(Untitled)"                            },
+    { ImGuiLocKey_OpenLink_s,           "Open '%s'"                             },
     { ImGuiLocKey_CopyLink,             "Copy Link###CopyLink"                  },
-    { ImGuiLocKey_DockingHideTabBar,    "Hide tab bar###HideTabBar"             },
+    { ImGuiLocKey_DockingHideTabBar,            "Hide tab bar###HideTabBar"             },
     { ImGuiLocKey_DockingHoldShiftToDock,       "Hold SHIFT to enable Docking window."  },
     { ImGuiLocKey_DockingDragToUndockOrMoveNode,"Click and drag to move or undock whole node."    },
 };
@@ -4094,7 +4097,7 @@ static void SetCurrentWindow(ImGuiWindow* window)
     if (window)
     {
         g.FontSize = g.DrawListSharedData.FontSize = window->CalcFontSize();
-        g.FontScale = g.FontSize / g.Font->FontSize;
+        g.FontScale = g.DrawListSharedData.FontScale = g.FontSize / g.Font->FontSize;
         ImGui::NavUpdateCurrentWindowIsScrollPushableX();
     }
 }
@@ -4385,6 +4388,17 @@ bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id, ImGuiItemFlags item_flag
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
+
+    // Detect ID conflicts
+#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+    if (id != 0 && g.HoveredIdPreviousFrame == id && (item_flags & ImGuiItemFlags_AllowDuplicateId) == 0)
+    {
+        g.HoveredIdPreviousFrameItemCount++;
+        if (g.DebugDrawIdConflicts == id)
+            window->DrawList->AddRect(bb.Min - ImVec2(1,1), bb.Max + ImVec2(1,1), IM_COL32(255, 0, 0, 255), 0.0f, ImDrawFlags_None, 2.0f);
+    }
+#endif
+
     if (g.HoveredWindow != window)
         return false;
     if (!IsMouseHoveringRect(bb.Min, bb.Max))
@@ -5003,6 +5017,11 @@ void ImGui::NewFrame()
     if (g.DragDropActive && g.DragDropPayload.SourceId == g.ActiveId)
         KeepAliveID(g.DragDropPayload.SourceId);
 
+    // [DEBUG]
+    g.DebugDrawIdConflicts = 0;
+    if (g.IO.ConfigDebugHighlightIdConflicts && g.HoveredIdPreviousFrameItemCount > 1)
+        g.DebugDrawIdConflicts = g.HoveredIdPreviousFrame;
+
     // Update HoveredId data
     if (!g.HoveredIdPreviousFrame)
         g.HoveredIdTimer = 0.0f;
@@ -5013,6 +5032,7 @@ void ImGui::NewFrame()
     if (g.HoveredId && g.ActiveId != g.HoveredId)
         g.HoveredIdNotActiveTimer += g.IO.DeltaTime;
     g.HoveredIdPreviousFrame = g.HoveredId;
+    g.HoveredIdPreviousFrameItemCount = 0;
     g.HoveredId = 0;
     g.HoveredIdAllowOverlap = false;
     g.HoveredIdIsDisabled = false;
@@ -5461,6 +5481,29 @@ void ImGui::EndFrame()
     if (g.FrameCountEnded == g.FrameCount)
         return;
     IM_ASSERT(g.WithinFrameScope && "Forgot to call ImGui::NewFrame()?");
+
+#ifndef IMGUI_DISABLE_DEBUG_TOOLS
+    if (g.DebugDrawIdConflicts != 0)
+    {
+        PushStyleColor(ImGuiCol_PopupBg, ImLerp(g.Style.Colors[ImGuiCol_PopupBg], ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 0.10f));
+        if (g.DebugItemPickerActive == false && BeginTooltipEx(ImGuiTooltipFlags_OverridePrevious, ImGuiWindowFlags_None))
+        {
+            SeparatorText("MESSAGE FROM DEAR IMGUI");
+            Text("Programmer error: %d visible items with conflicting ID!", g.HoveredIdPreviousFrameItemCount);
+            BulletText("Code should use PushID()/PopID() in loops, or append \"##xx\" to same-label identifiers!");
+            BulletText("Empty label e.g. Button(\"\") == same ID as parent widget/node. Use Button(\"##xx\") instead!");
+            BulletText("Press F1 to open \"FAQ -> About the ID Stack System\" and read details.");
+            BulletText("Press CTRL+P to activate Item Picker and debug-break in item call-stack.");
+            BulletText("Set io.ConfigDebugDetectIdConflicts=false to disable this warning in non-programmers builds.");
+            EndTooltip();
+        }
+        PopStyleColor();
+        if (Shortcut(ImGuiMod_Ctrl | ImGuiKey_P, ImGuiInputFlags_RouteGlobal))
+            DebugStartItemPicker();
+        if (Shortcut(ImGuiKey_F1, ImGuiInputFlags_RouteGlobal) && g.PlatformIO.Platform_OpenInShellFn != NULL)
+            g.PlatformIO.Platform_OpenInShellFn(&g, "https://github.com/ocornut/imgui/blob/master/docs/FAQ.md#qa-usage");
+    }
+#endif
 
     CallContextHooks(&g, ImGuiContextHookType_EndFramePre);
 
@@ -9620,7 +9663,7 @@ bool ImGui::IsKeyPressed(ImGuiKey key, bool repeat)
     return IsKeyPressed(key, repeat ? ImGuiInputFlags_Repeat : ImGuiInputFlags_None, ImGuiKeyOwner_Any);
 }
 
-// Important: unless legacy IsKeyPressed(ImGuiKey, bool repeat=true) which DEFAULT to repeat, this requires EXPLICIT repeat.
+// Important: unlike legacy IsKeyPressed(ImGuiKey, bool repeat=true) which DEFAULT to repeat, this requires EXPLICIT repeat.
 bool ImGui::IsKeyPressed(ImGuiKey key, ImGuiInputFlags flags, ImGuiID owner_id)
 {
     const ImGuiKeyData* key_data = GetKeyData(key);
@@ -13863,9 +13906,11 @@ static void ImGui::NavUpdateWindowing()
 
     // Keyboard: Press and Release ALT to toggle menu layer
     const ImGuiKey windowing_toggle_keys[] = { ImGuiKey_LeftAlt, ImGuiKey_RightAlt };
+    bool windowing_toggle_layer_start = false;
     for (ImGuiKey windowing_toggle_key : windowing_toggle_keys)
         if (nav_keyboard_active && IsKeyPressed(windowing_toggle_key, 0, ImGuiKeyOwner_NoOwner))
         {
+            windowing_toggle_layer_start = true;
             g.NavWindowingToggleLayer = true;
             g.NavWindowingToggleKey = windowing_toggle_key;
             g.NavInputSource = ImGuiInputSource_Keyboard;
@@ -13879,7 +13924,9 @@ static void ImGui::NavUpdateWindowing()
         // We cancel toggling nav layer if an owner has claimed the key.
         if (io.InputQueueCharacters.Size > 0 || io.KeyCtrl || io.KeyShift || io.KeySuper)
             g.NavWindowingToggleLayer = false;
-        if (TestKeyOwner(g.NavWindowingToggleKey, ImGuiKeyOwner_NoOwner) == false || TestKeyOwner(ImGuiMod_Alt, ImGuiKeyOwner_NoOwner) == false)
+        else if (windowing_toggle_layer_start == false && g.LastKeyboardKeyPressTime == g.Time)
+            g.NavWindowingToggleLayer = false;
+        else if (TestKeyOwner(g.NavWindowingToggleKey, ImGuiKeyOwner_NoOwner) == false || TestKeyOwner(ImGuiMod_Alt, ImGuiKeyOwner_NoOwner) == false)
             g.NavWindowingToggleLayer = false;
 
         // Apply layer toggle on Alt release

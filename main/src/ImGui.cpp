@@ -2,7 +2,7 @@
 #include "Save.hpp"
 #include "Upload.hpp"
 #include <glad/glad.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <thread>
