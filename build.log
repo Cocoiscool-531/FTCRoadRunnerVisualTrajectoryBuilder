@@ -1,23 +1,21 @@
-[01m[Kmain/src/FileExplorer.cpp:[m[K In member function '[01m[Kint FileExplorer::[01;32m[Krender[m[K(const char*)[m[K':
-[01m[Kmain/src/FileExplorer.cpp:39:48:[m[K [01;31m[Kerror: [m[K'[01m[KImGuiWindowFlags_NoDocking[m[K' was not declared in this scope; did you mean '[01m[KImGuiWindowFlags_Tooltip[m[K'?
-   39 |         ImGui::Begin("File Explorer", nullptr, [01;31m[KImGuiWindowFlags_NoDocking[m[K);
-      |                                                [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
-      |                                                [32m[KImGuiWindowFlags_Tooltip[m[K
-[01m[Kmain/src/ImGui.cpp:[m[K In constructor '[01m[KImGuiClass::[01;32m[KImGuiClass[m[K(int)[m[K':
-[01m[Kmain/src/ImGui.cpp:114:27:[m[K [01;31m[Kerror: [m[K'[01m[KImGuiConfigFlags_DockingEnable[m[K' was not declared in this scope; did you mean '[01m[KImGuiConfigFlags_None[m[K'?
-  114 |         io.ConfigFlags |= [01;31m[KImGuiConfigFlags_DockingEnable[m[K;
-      |                           [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
-      |                           [32m[KImGuiConfigFlags_None[m[K
-[01m[Kmain/src/ImGui.cpp:115:27:[m[K [01;31m[Kerror: [m[K'[01m[KImGuiConfigFlags_ViewportsEnable[m[K' was not declared in this scope
-  115 |         io.ConfigFlags |= [01;31m[KImGuiConfigFlags_ViewportsEnable[m[K;
-      |                           [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
-[01m[Kmain/src/ImGui.cpp:[m[K In member function '[01m[Kvoid ImGuiClass::[01;32m[Kend[m[K()[m[K':
-[01m[Kmain/src/ImGui.cpp:150:30:[m[K [01;31m[Kerror: [m[K'[01m[KImGuiConfigFlags_ViewportsEnable[m[K' was not declared in this scope
-  150 |         if (io.ConfigFlags & [01;31m[KImGuiConfigFlags_ViewportsEnable[m[K)
-      |                              [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
-[01m[Kmain/src/ImGui.cpp:153:24:[m[K [01;31m[Kerror: [m[K'[01m[KUpdatePlatformWindows[m[K' is not a member of '[01m[KImGui[m[K'
-  153 |                 ImGui::[01;31m[KUpdatePlatformWindows[m[K();
-      |                        [01;31m[K^~~~~~~~~~~~~~~~~~~~~[m[K
-[01m[Kmain/src/ImGui.cpp:154:24:[m[K [01;31m[Kerror: [m[K'[01m[KRenderPlatformWindowsDefault[m[K' is not a member of '[01m[KImGui[m[K'
-  154 |                 ImGui::[01;31m[KRenderPlatformWindowsDefault[m[K();
-      |                        [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+main/src/Renderer.cpp:16:2: error: use of undeclared identifier 'glCreateVertexArrays'
+        glCreateVertexArrays(1, &va);
+        ^
+main/src/Renderer.cpp:20:2: error: use of undeclared identifier 'glCreateBuffers'
+        glCreateBuffers(1, &vb);
+        ^
+main/src/Renderer.cpp:35:2: error: use of undeclared identifier 'glCreateBuffers'
+        glCreateBuffers(1, &ib);
+        ^
+3 errors generated.
+main/src/Texture.cpp:21:2: error: use of undeclared identifier 'glCreateTextures'
+        glCreateTextures(GL_TEXTURE_2D, 1, &id);
+        ^
+main/src/Texture.cpp:24:2: error: use of undeclared identifier 'glTextureStorage2D'
+        glTextureStorage2D(id, 1, (channels == 4 ? GL_RGBA8 : GL_RGB8), width, height);
+        ^
+main/src/Texture.cpp:27:2: error: use of undeclared identifier 'glTextureSubImage2D'
+        glTextureSubImage2D(id, 0, 0, 0, width, height, (channels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data);
+        ^
+3 errors generated.
+error: invalid argument '-std=c++17' not allowed with 'C'

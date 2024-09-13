@@ -70,7 +70,7 @@ int main(int argc, char** argv)
 	glfwSetWindowUserPointer(window, &running);
 	glfwSetWindowAttrib(window, GLFW_RESIZABLE, GLFW_FALSE);
 
-	int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+	int status = gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress);
 
 	if (status == GL_FALSE)
 	{

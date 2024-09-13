@@ -5,3 +5,5 @@ export/*
 TrajectoryBuilder.lnk
 main.lnk
 .fake
+.DS_Store
+.build.log

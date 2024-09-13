@@ -1,2 +1,5 @@
 /usr/bin/clear
-cc -fdiagnostics-color -Wc++11-long-long -Wc++11-extensions -Iinclude -Imain/src -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -g main/src/*.cpp include/glad/*.c include/imgui/*.cpp -o bin/trajectoryBuilderMacArm
+/usr/bin/cc \
+-std=c++17 -fno-diagnostics-color -Iinclude -Imain/src \
+-Lbin -l:libglfw3.a -g main/src/*.cpp \
+include/glad/*.c include/imgui/*.cpp -o bin/trajectoryBuilderMacArm &> build.log 
